@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 import 'dart:math' as math;
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 
@@ -49,6 +48,7 @@ class RenderSliverFlex extends RenderSliver with ContainerRenderObjectMixin<Rend
 
   @override
   void performLayout() {
+    // TODO(Piinks): Clean it up.
     assert(constraints != null);
     geometry = SliverGeometry.zero;
     double layoutOffset = 0;
@@ -110,27 +110,31 @@ class RenderSliverFlex extends RenderSliver with ContainerRenderObjectMixin<Rend
       child = childParentData.nextSibling;
     }
 
-    _originalScrollExtent = geometry.layoutExtent + constraints.precedingScrollExtent;
-    print('_originalScrollExtent: $_originalScrollExtent');
-    //double availableFlexExtent = constraints.viewportMainAxisExtent - constraints.scrollOffset;
-    
     // Flex Factoring
+    double scrollOffsetForFlex = constraints.scrollOffset;
+    if (_originalScrollExtent == null) {
+      _originalScrollExtent = geometry.layoutExtent + constraints.precedingScrollExtent;
+      if (_originalScrollExtent < constraints.scrollOffset) {
+        _originalScrollExtent += geometry.scrollExtent;
+        scrollOffsetForFlex = 0.0;
+      }
+    }
+    
     if(_originalScrollExtent < constraints.viewportMainAxisExtent && totalFlex > 0 && _spacePerFlex == null) {
-      _spacePerFlex = (constraints.viewportMainAxisExtent - (_originalScrollExtent + constraints.scrollOffset) )/totalFlex;
-                                                          //- constraints.cacheOrigin) / totalFlex;
-      
-      
-      print('_spacePerFlex: $_spacePerFlex');
+      _spacePerFlex = (constraints.viewportMainAxisExtent - (_originalScrollExtent + scrollOffsetForFlex) )/totalFlex;
       performLayout();
     }
-    // Group Pinned Header Behavior
+
+    // Persistent Headers
     double headerPushExtent = -(geometry.scrollExtent - constraints.scrollOffset) + constraints.overlap;
+    print('$key Push: $headerPushExtent');
     double groupOffset = 0.0;
     if (headerPushExtent < 0.0 && headerPushExtent.abs() <= firstChild.geometry.scrollExtent) {
       groupOffset = -(firstChild.geometry.scrollExtent + headerPushExtent);
     } else if (headerPushExtent > 0.0) {
       groupOffset = -firstChild.geometry.scrollExtent;
     }
+    print('$key groupOffset: $groupOffset');
     if (pushPinnedHeaders && firstChild is RenderSliverPinnedPersistentHeader && groupOffset != 0.0) {
       firstChild.layout(firstChild.constraints.copyWith(flexExtent: groupOffset));
       geometry = SliverGeometry(
@@ -163,18 +167,18 @@ class RenderSliverFlex extends RenderSliver with ContainerRenderObjectMixin<Rend
     return null;
   }
 
-  @override
-  double childMainAxisPosition(RenderObject child) {
-    assert(child.parent == this);
-    final SliverPhysicalContainerParentData childParentData = child.parentData;
-    // TODO: implement childMainAxisPosition
-  }
+  // @override
+  // double childMainAxisPosition(RenderObject child) {
+  //   assert(child.parent == this);
+  //   final SliverPhysicalContainerParentData childParentData = child.parentData;
+  //   // TODO: implement childMainAxisPosition
+  // }
 
-  @override
-  double childScrollOffset(RenderObject child) {
-    assert(child.parent == this);
-    // TODO
-  }
+  // @override
+  // double childScrollOffset(RenderObject child) {
+  //   assert(child.parent == this);
+  //   print()
+  // }
 
   @override
   void paint(PaintingContext context, Offset offset) {
@@ -196,7 +200,8 @@ class RenderSliverFlex extends RenderSliver with ContainerRenderObjectMixin<Rend
             result,
             mainAxisPosition: _computeChildMainAxisPosition(child, mainAxisPosition),
             crossAxisPosition: crossAxisPosition,
-          )) {
+          )
+      ) {
         return true;
       }
     }

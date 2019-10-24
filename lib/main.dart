@@ -42,38 +42,65 @@ class SliverHeaderDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class MyHomePage extends StatelessWidget {
-  final ScrollController _controller = ScrollController(initialScrollOffset: 300);
+  // final ScrollController _controller = ScrollController(initialScrollOffset: 300);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: CustomScrollView(
-        controller: _controller,
+        // controller: _controller,
         slivers: <Widget>[
-          SliverAppBar(
-            title: Text('Flex, Group & Expanded'),
-            pinned: true,
-          ),
+          // SliverAppBar(
+          //   title: Text('Flex, Group & Expanded'),
+          //   expandedHeight: 100,
+          //   floating: true,
+          //   pinned: false,
+          // ),
+                // SliverPersistentHeader(
+                //       floating: true,
+                //       pinned: false,
+                //       delegate: SliverHeaderDelegate(
+                //         minHeight: 50,
+                //         maxHeight: 100,
+                //         child: Container(
+                //           color: Colors.blue[700],
+                //           child: Center(
+                //             child: Text(
+                //               'Outside',
+                //               textAlign: TextAlign.center,
+                //               style: TextStyle(
+                //                 color: Colors.white,
+                //                 fontSize: 20,
+                //                 fontWeight: FontWeight.bold,
+                //               )
+                //             ),
+                //           ),
+                //         )
+                //       )
+                //     ),
           // SliverGroup(slivers: [
           //   SliverExpanded(child: 
-          //     SliverToBoxAdapter(child: Container(color: Colors.red))
+          //     SliverToBoxAdapter(child: Container(color: Colors.red, height: 100))
           //   ),
-          //   // SliverSpacer(),
+          //   SliverSpacer(),
           //   SliverToBoxAdapter(child: Container(color: Colors.blue, height: 100))
           // ]),
-          // SliverToBoxAdapter(child: Container(color: Colors.blue, height: 100)),
+          // SliverToBoxAdapter(child: Container(color: Colors.red, height: 100)),
           SliverGroup(
             key: Key('Group 1'),
             pushPinnedHeaders: true,
             slivers: <Widget>[
               SliverPersistentHeader(
+                // TODO(Piinks): Check all PersistentHeaders & various configurations
+                floating: false,
                 pinned: true,
                 delegate: SliverHeaderDelegate(
                   minHeight: 50,
-                  maxHeight: 50,
+                  maxHeight: 100,
                   child: Container(
                     color: Colors.blue[700],
                     child: Center(
-                      child: Text('SliverGroup 1',
+                      child: Text(
+                        'SliverGroup 1',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.white,
@@ -88,7 +115,7 @@ class MyHomePage extends StatelessWidget {
               SliverExpanded(
                 child: SliverToBoxAdapter(
                   child: Container(
-                    height: 150.0,
+                    height: 100.0,
                     color: Colors.amberAccent[400],
                     child: Center(
                       child: Text(
@@ -106,7 +133,7 @@ class MyHomePage extends StatelessWidget {
                 flex: 2,
                 child: SliverToBoxAdapter(
                   child: Container(
-                    height: 150.0,
+                    height: 100.0,
                     color: Colors.orange[400],
                     child: Center(
                       child: Text(
@@ -166,7 +193,7 @@ class MyHomePage extends StatelessWidget {
               SliverExpanded(
                 child: SliverToBoxAdapter(
                   child: Container(
-                    height: 150.0,
+                    height: 100.0,
                     color: Colors.amberAccent[400],
                     child: Center(
                       child: Text(
