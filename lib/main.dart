@@ -47,7 +47,7 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: CustomScrollView(
-        // controller: _controller,
+        controller: _controller,
         slivers: <Widget>[
           SliverAppBar(
             title: Text('Flex, Group & Expanded'),
@@ -71,10 +71,9 @@ class MyHomePage extends StatelessWidget {
                   minHeight: 50,
                   maxHeight: 50,
                   child: Container(
-                    color: Colors.red[200],
+                    color: Colors.blue[700],
                     child: Center(
-                      child: Text(
-                        'SliverGroup 1',
+                      child: Text('SliverGroup 1',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.white,
@@ -124,7 +123,7 @@ class MyHomePage extends StatelessWidget {
               SliverToBoxAdapter(
                 child: Container(
                   height: 200,
-                  color: Colors.blueGrey[200],
+                  color: Colors.blueGrey[300],
                   child: Center(
                     child: Text(
                       'SliverToBoxAdapter\n Container height: 200',
@@ -149,7 +148,7 @@ class MyHomePage extends StatelessWidget {
                   minHeight: 50,
                   maxHeight: 50,
                   child: Container(
-                    color: Colors.red[300],
+                    color: Colors.blue[900],
                     child: Center(
                       child: Text(
                         'SliverGroup 2',
@@ -181,10 +180,11 @@ class MyHomePage extends StatelessWidget {
                   ),
                 ),
               ),
+              SliverSpacer(),
               SliverToBoxAdapter(
                 child: Container(
                   height: 1000,
-                  color: Colors.blueAccent,
+                  color: Colors.blueGrey[400],
                   child: Center(
                     child: Text(
                       'SliverToBoxAdapter\n Container height: 1000',

@@ -111,14 +111,14 @@ class RenderSliverFlex extends RenderSliver with ContainerRenderObjectMixin<Rend
     }
 
     _originalScrollExtent = geometry.layoutExtent + constraints.precedingScrollExtent;
+    print('_originalScrollExtent: $_originalScrollExtent');
     //double availableFlexExtent = constraints.viewportMainAxisExtent - constraints.scrollOffset;
     
     // Flex Factoring
     if(_originalScrollExtent < constraints.viewportMainAxisExtent && totalFlex > 0 && _spacePerFlex == null) {
-      if (_spacePerFlex == null) {
-        _spacePerFlex = (constraints.viewportMainAxisExtent - (_originalScrollExtent + constraints.scrollOffset)
-                                                            - constraints.cacheOrigin) / totalFlex;
-      }
+      _spacePerFlex = (constraints.viewportMainAxisExtent - (_originalScrollExtent + constraints.scrollOffset) )/totalFlex;
+                                                          //- constraints.cacheOrigin) / totalFlex;
+      
       
       print('_spacePerFlex: $_spacePerFlex');
       performLayout();
