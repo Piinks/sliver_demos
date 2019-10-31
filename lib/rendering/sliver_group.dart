@@ -12,8 +12,10 @@ class RenderSliverFlex extends RenderSliver with ContainerRenderObjectMixin<Rend
   RenderSliverFlex({
     this.key,
     bool pushPinnedHeaders = true,
+    double manualExtent = 0.0,
     List<RenderSliver> children,
-  }) : _pushPinnedHeaders = pushPinnedHeaders {
+  }) : _pushPinnedHeaders = pushPinnedHeaders,
+       _manualExtent = manualExtent {
     addAll(children);
   }
   
@@ -24,11 +26,24 @@ class RenderSliverFlex extends RenderSliver with ContainerRenderObjectMixin<Rend
   bool get pushPinnedHeaders => _pushPinnedHeaders; 
   bool _pushPinnedHeaders;
   set pushPinnedHeaders(bool newValue) {
+    assert(newValue != null);
     if (newValue == _pushPinnedHeaders)
       return;
     _pushPinnedHeaders = newValue;
     markNeedsLayout();
   }
+
+  /// Doc
+  double get manualExtent => _manualExtent; 
+  double _manualExtent;
+  set manualExtent(double newValue) {
+    assert(newValue >= 0.0);
+    if (newValue == _manualExtent)
+      return;
+    _manualExtent = newValue;
+    markNeedsLayout();
+  }
+
 
   /// Doc all of these
   double _spacePerFlex;
@@ -48,27 +63,32 @@ class RenderSliverFlex extends RenderSliver with ContainerRenderObjectMixin<Rend
 
   @override
   void performLayout() {
-    // TODO(Piinks): Clean it up.
     assert(constraints != null);
     geometry = SliverGeometry.zero;
-    double layoutOffset = 0;
-    double scrollOffset = constraints.scrollOffset;
-    double precedingScrollExtent = constraints.precedingScrollExtent;
-    double maxPaintOffset = constraints.overlap;
-    int totalFlex = 0;
+    double groupLayoutExtent = 0;
+    double groupMaxPaintOffset = constraints.overlap;
+    double groupPrecedingScrollExtent = constraints.precedingScrollExtent;
+    double groupScrollOffset = constraints.scrollOffset;
+    int groupTotalFlex = 0;
 
     RenderSliver child = firstChild;
     while (child != null) {
-      final double childScrollOffset = math.max(0, scrollOffset - layoutOffset);
+      final double childScrollOffset = math.max(0, groupScrollOffset - groupLayoutExtent);
       int childFlexFactor = _getFlex(child);
-      totalFlex += childFlexFactor;
+      groupTotalFlex += childFlexFactor;
+
+      // FirstChild is SliverPersistentHeader
+      if (child == firstChild && child is RenderSliverPersistentHeader) {
+        print('GOtcha!');
+      }
+
       child.layout(
         constraints.copyWith(
           scrollOffset: childScrollOffset,
-          precedingScrollExtent: precedingScrollExtent,
-          overlap: maxPaintOffset - layoutOffset,
-          remainingPaintExtent: math.max(0, constraints.remainingPaintExtent - layoutOffset),
-          remainingCacheExtent: math.max(0, constraints.remainingCacheExtent - layoutOffset),
+          precedingScrollExtent: groupPrecedingScrollExtent,
+          overlap: groupMaxPaintOffset - groupLayoutExtent,
+          remainingPaintExtent: math.max(0, constraints.remainingPaintExtent - groupLayoutExtent),
+          remainingCacheExtent: math.max(0, constraints.remainingCacheExtent - groupLayoutExtent),
           cacheOrigin: math.max(-childScrollOffset, constraints.cacheOrigin),
           flexExtent: childFlexFactor > 0 && _spacePerFlex != null ? childFlexFactor * _spacePerFlex : 0.0,
         ),
@@ -80,7 +100,7 @@ class RenderSliverFlex extends RenderSliver with ContainerRenderObjectMixin<Rend
       
       geometry = SliverGeometry(
         scrollExtent: geometry.scrollExtent + childGeometry.scrollExtent,
-        paintExtent: math.max(geometry.paintExtent, layoutOffset + childGeometry.paintOrigin + childGeometry.paintExtent),
+        paintExtent: math.max(geometry.paintExtent, groupLayoutExtent + childGeometry.paintOrigin + childGeometry.paintExtent),
         layoutExtent: geometry.layoutExtent + childGeometry.layoutExtent,
         maxPaintExtent: geometry.maxPaintExtent + childGeometry.maxPaintExtent,
         maxScrollObstructionExtent: geometry.maxScrollObstructionExtent + childGeometry.maxScrollObstructionExtent,
@@ -91,21 +111,20 @@ class RenderSliverFlex extends RenderSliver with ContainerRenderObjectMixin<Rend
         cacheExtent: geometry.cacheExtent + childGeometry.cacheExtent,
       );
 
-      // No need to layout other children as parent has to correct the scrollOffset
-      // and layout us again.
+      // Scroll offset will be adjusted, and layout rerun.
       if (geometry.scrollOffsetCorrection != null) {
         return;
       }
 
-      final double effectiveLayoutOffset = layoutOffset + childGeometry.paintOrigin;
+      final double effectiveLayoutOffset = groupLayoutExtent + childGeometry.paintOrigin;
 
       childParentData.paintOffset = _computeAbsolutePaintOffset(child, effectiveLayoutOffset);
 
-      maxPaintOffset = math.max(effectiveLayoutOffset + childGeometry.paintExtent, maxPaintOffset);
+      groupMaxPaintOffset = math.max(effectiveLayoutOffset + childGeometry.paintExtent, groupMaxPaintOffset);
 
-      layoutOffset = layoutOffset + math.min(constraints.remainingPaintExtent, childGeometry.layoutExtent);
-      precedingScrollExtent += childGeometry.scrollExtent;
-      scrollOffset -= childGeometry.scrollExtent;
+      groupLayoutExtent = groupLayoutExtent + math.min(constraints.remainingPaintExtent, childGeometry.layoutExtent);
+      groupPrecedingScrollExtent += childGeometry.scrollExtent;
+      groupScrollOffset -= childGeometry.scrollExtent;
 
       child = childParentData.nextSibling;
     }
@@ -120,8 +139,8 @@ class RenderSliverFlex extends RenderSliver with ContainerRenderObjectMixin<Rend
       }
     }
     
-    if(_originalScrollExtent < constraints.viewportMainAxisExtent && totalFlex > 0 && _spacePerFlex == null) {
-      _spacePerFlex = (constraints.viewportMainAxisExtent - (_originalScrollExtent + scrollOffsetForFlex) )/totalFlex;
+    if(_originalScrollExtent < constraints.viewportMainAxisExtent && groupTotalFlex > 0 && _spacePerFlex == null) {
+      _spacePerFlex = (constraints.viewportMainAxisExtent - (_originalScrollExtent + scrollOffsetForFlex) )/groupTotalFlex;
       performLayout();
     }
 
@@ -138,9 +157,9 @@ class RenderSliverFlex extends RenderSliver with ContainerRenderObjectMixin<Rend
     if (pushPinnedHeaders && firstChild is RenderSliverPinnedPersistentHeader && groupOffset != 0.0) {
       firstChild.layout(firstChild.constraints.copyWith(flexExtent: groupOffset));
       geometry = SliverGeometry(
-        scrollExtent: _flexedScrollExtent,
+        scrollExtent: geometry.scrollExtent,//_flexedScrollExtent,
         paintExtent: geometry.paintExtent + groupOffset,
-        layoutExtent: math.min(geometry.layoutExtent, geometry.paintExtent + groupOffset),//
+        layoutExtent: math.min(geometry.layoutExtent, geometry.paintExtent + groupOffset),
         maxPaintExtent: geometry.maxPaintExtent,
         maxScrollObstructionExtent: geometry.maxScrollObstructionExtent ,
         hitTestExtent: geometry.hitTestExtent,

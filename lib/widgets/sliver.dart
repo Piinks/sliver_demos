@@ -15,22 +15,27 @@ class SliverFlex extends MultiChildRenderObjectWidget {
     Key key,
     @required List<Widget> slivers,
     bool pushPinnedHeaders = true,
+    double manualExtent = 0.0,
   }) : _pushPinnedHeaders = pushPinnedHeaders,
+       _manualExtent = manualExtent,
        super(children: slivers, key: key);
 
   final bool _pushPinnedHeaders;
+  final double _manualExtent;
 
   @override
   RenderSliverFlex createRenderObject(BuildContext context) {
     return RenderSliverFlex(
       key: key,
       pushPinnedHeaders: _pushPinnedHeaders,
+      manualExtent: _manualExtent,
     );
   }
 
   @override
   void updateRenderObject(BuildContext context, RenderSliverFlex renderObject) {
     renderObject.pushPinnedHeaders = _pushPinnedHeaders;
+    renderObject.manualExtent = _manualExtent;
   }
 }
 
@@ -39,10 +44,12 @@ class SliverGroup extends SliverFlex {
     Key key,
     List<Widget> slivers = const <Widget>[],
     bool pushPinnedHeaders = true,
+    double manualExtent = 0.0,
   }) : super(
     key: key, 
     slivers: slivers, 
     pushPinnedHeaders: pushPinnedHeaders,
+    manualExtent: manualExtent,
   );
 }
 

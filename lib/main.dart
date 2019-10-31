@@ -49,12 +49,12 @@ class MyHomePage extends StatelessWidget {
       body: CustomScrollView(
         // controller: _controller,
         slivers: <Widget>[
-          // SliverAppBar(
-          //   title: Text('Flex, Group & Expanded'),
-          //   expandedHeight: 100,
-          //   floating: true,
-          //   pinned: false,
-          // ),
+          SliverAppBar(
+            title: Text('SliverAppBar\n pinned:true'),
+            expandedHeight: 100,
+            // floating: true,
+            pinned: true,
+          ),
                 // SliverPersistentHeader(
                 //       floating: true,
                 //       pinned: false,
@@ -91,11 +91,10 @@ class MyHomePage extends StatelessWidget {
             slivers: <Widget>[
               SliverPersistentHeader(
                 // TODO(Piinks): Check all PersistentHeaders & various configurations
-                floating: false,
                 pinned: true,
                 delegate: SliverHeaderDelegate(
                   minHeight: 50,
-                  maxHeight: 100,
+                  maxHeight: 50, //100,
                   child: Container(
                     color: Colors.blue[700],
                     child: Center(
@@ -119,12 +118,13 @@ class MyHomePage extends StatelessWidget {
                     color: Colors.amberAccent[400],
                     child: Center(
                       child: Text(
-                        'SliverExpanded flex: 1',
+                        'SliverExpanded\ndefault height: 150, flex: 1',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontFamily: 'LucyTheCat',
-                          fontSize: 35,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
                         ),
-                      )
+                      ),
                     ),
                   ),
                 ),
@@ -137,12 +137,13 @@ class MyHomePage extends StatelessWidget {
                     color: Colors.orange[400],
                     child: Center(
                       child: Text(
-                        'SliverExpanded flex: 2',
+                        'SliverExpanded\ndefault height: 150, flex: 2',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontFamily: 'LucyTheCat',
-                          fontSize: 35,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
                         ),
-                      )
+                      ),
                     ),
                   ),
                 ),
@@ -197,12 +198,13 @@ class MyHomePage extends StatelessWidget {
                     color: Colors.amberAccent[400],
                     child: Center(
                       child: Text(
-                        'SliverExpanded',
+                        'SliverExpanded\ndefault height: 150',
+                        textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontFamily: 'LucyTheCat',
-                          fontSize: 50,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
                         ),
-                      )
+                      ),
                     ),
                   ),
                 ),
