@@ -12,10 +12,10 @@ class RenderSliverFlex extends RenderSliver with ContainerRenderObjectMixin<Rend
   RenderSliverFlex({
     this.key,
     bool pushPinnedHeaders = true,
-    double manualExtent = 0.0,
+    double overrideGroupMaxExtent = 0.0,
     List<RenderSliver> children,
   }) : _pushPinnedHeaders = pushPinnedHeaders,
-       _manualExtent = manualExtent {
+       _overrideGroupMaxExtent = overrideGroupMaxExtent {
     addAll(children);
   }
   
@@ -34,21 +34,19 @@ class RenderSliverFlex extends RenderSliver with ContainerRenderObjectMixin<Rend
   }
 
   /// Doc
-  double get manualExtent => _manualExtent; 
-  double _manualExtent;
-  set manualExtent(double newValue) {
+  double get overrideGroupMaxExtent => _overrideGroupMaxExtent; 
+  double _overrideGroupMaxExtent;
+  set overrideGroupMaxExtent(double newValue) {
     assert(newValue >= 0.0);
-    if (newValue == _manualExtent)
+    if (newValue == _overrideGroupMaxExtent)
       return;
-    _manualExtent = newValue;
+    _overrideGroupMaxExtent = newValue;
     markNeedsLayout();
   }
-
 
   /// Doc all of these
   double _spacePerFlex;
   double _originalScrollExtent;
-  double _flexedScrollExtent = 0.0;
 
   @override
   void setupParentData(RenderObject child) {
@@ -76,12 +74,7 @@ class RenderSliverFlex extends RenderSliver with ContainerRenderObjectMixin<Rend
       final double childScrollOffset = math.max(0, groupScrollOffset - groupLayoutExtent);
       int childFlexFactor = _getFlex(child);
       groupTotalFlex += childFlexFactor;
-
-      // FirstChild is SliverPersistentHeader
-      if (child == firstChild && child is RenderSliverPersistentHeader) {
-        print('GOtcha!');
-      }
-
+      
       child.layout(
         constraints.copyWith(
           scrollOffset: childScrollOffset,
@@ -112,9 +105,8 @@ class RenderSliverFlex extends RenderSliver with ContainerRenderObjectMixin<Rend
       );
 
       // Scroll offset will be adjusted, and layout rerun.
-      if (geometry.scrollOffsetCorrection != null) {
+      if (geometry.scrollOffsetCorrection != null)
         return;
-      }
 
       final double effectiveLayoutOffset = groupLayoutExtent + childGeometry.paintOrigin;
 
@@ -146,30 +138,26 @@ class RenderSliverFlex extends RenderSliver with ContainerRenderObjectMixin<Rend
 
     // Persistent Headers
     double headerPushExtent = -(geometry.scrollExtent - constraints.scrollOffset) + constraints.overlap;
-    print('$key Push: $headerPushExtent');
     double groupOffset = 0.0;
+
     if (headerPushExtent < 0.0 && headerPushExtent.abs() <= firstChild.geometry.scrollExtent) {
       groupOffset = -(firstChild.geometry.scrollExtent + headerPushExtent);
     } else if (headerPushExtent > 0.0) {
       groupOffset = -firstChild.geometry.scrollExtent;
     }
-    print('$key groupOffset: $groupOffset');
-    if (pushPinnedHeaders && firstChild is RenderSliverPinnedPersistentHeader && groupOffset != 0.0) {
-      firstChild.layout(firstChild.constraints.copyWith(flexExtent: groupOffset));
-      geometry = SliverGeometry(
-        scrollExtent: geometry.scrollExtent,//_flexedScrollExtent,
+    
+    if (pushPinnedHeaders && groupOffset != 0.0 &&
+       (firstChild is RenderSliverPinnedPersistentHeader || firstChild is RenderSliverFloatingPinnedPersistentHeader)) {
+      
+      firstChild.layout(
+        firstChild.constraints.copyWith(flexExtent: groupOffset),
+        parentUsesSize: true,
+      );
+      geometry = geometry.copyWith(
         paintExtent: geometry.paintExtent + groupOffset,
         layoutExtent: math.min(geometry.layoutExtent, geometry.paintExtent + groupOffset),
-        maxPaintExtent: geometry.maxPaintExtent,
-        maxScrollObstructionExtent: geometry.maxScrollObstructionExtent ,
-        hitTestExtent: geometry.hitTestExtent,
-        visible: geometry.visible,
-        hasVisualOverflow: geometry.hasVisualOverflow,
-        scrollOffsetCorrection: geometry.scrollOffsetCorrection,
-        cacheExtent: geometry.cacheExtent,
       );
     }
-    _flexedScrollExtent = geometry.scrollExtent;
   }
 
   Offset _computeAbsolutePaintOffset(RenderSliver child, double layoutOffset) {
@@ -186,19 +174,6 @@ class RenderSliverFlex extends RenderSliver with ContainerRenderObjectMixin<Rend
     return null;
   }
 
-  // @override
-  // double childMainAxisPosition(RenderObject child) {
-  //   assert(child.parent == this);
-  //   final SliverPhysicalContainerParentData childParentData = child.parentData;
-  //   // TODO: implement childMainAxisPosition
-  // }
-
-  // @override
-  // double childScrollOffset(RenderObject child) {
-  //   assert(child.parent == this);
-  //   print()
-  // }
-
   @override
   void paint(PaintingContext context, Offset offset) {
     for (final RenderSliver child in _childrenInPaintOrder) {
@@ -214,15 +189,13 @@ class RenderSliverFlex extends RenderSliver with ContainerRenderObjectMixin<Rend
     assert(mainAxisPosition != null);
     assert(crossAxisPosition != null);
     for (final RenderSliver child in _childrenInPaintOrder) {
-      if (child.geometry.visible &&
-          child.hitTest(
-            result,
-            mainAxisPosition: _computeChildMainAxisPosition(child, mainAxisPosition),
-            crossAxisPosition: crossAxisPosition,
-          )
-      ) {
+      final bool childHitTest = child.hitTest(
+        result,
+        mainAxisPosition: _computeChildMainAxisPosition(child, mainAxisPosition),
+        crossAxisPosition: crossAxisPosition,
+      );
+      if (child.geometry.visible && childHitTest)
         return true;
-      }
     }
     return false;
   }
@@ -242,13 +215,6 @@ class RenderSliverFlex extends RenderSliver with ContainerRenderObjectMixin<Rend
         return child.geometry.paintExtent - (parentMainAxisPosition - childParentData.paintOffset.dx);
     }
     return 0.0;
-  }
-
-  @override
-  void applyPaintTransform(RenderObject child, Matrix4 transform) {
-    assert(child != null);
-    final SliverPhysicalParentData childParentData = child.parentData;
-    childParentData.applyPaintTransform(transform);
   }
 
   Iterable<RenderSliver> get _childrenInPaintOrder sync* {
