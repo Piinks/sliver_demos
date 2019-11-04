@@ -1,3 +1,6 @@
+// /// To be used in conjunction with the changes proposed on the Piinks-sliverFlex
+// /// branch.
+
 // /// A sliver with a [RenderBox] child which never scrolls off the viewport in
 // /// the positive scroll direction, and which first scrolls on at a full size but
 // /// then shrinks as the viewport continues to scroll.
